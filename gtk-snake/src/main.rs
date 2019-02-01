@@ -22,10 +22,6 @@ impl Game {
 
 fn main() {
     const APP_ID: &str = "io.github.ian910297.gtk-snake";
-    const WINDOW_WIDTH: i32 = 600;
-    const WINDOW_HEIGHT: i32 = 800;
-    const TILE: i32 = 10;
-    const STYLE: &[u8] = include_bytes!("style.css");
 
     let game = Game::new();
 
