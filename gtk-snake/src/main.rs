@@ -5,8 +5,8 @@ extern crate gtk;
 use gio::prelude::*;
 use gtk::prelude::*;
 
-pub mod gui;
-pub mod config;
+mod gui;
+mod config;
 
 pub struct Game {
     score: i32
@@ -27,7 +27,10 @@ fn main() {
 
     match gtk::Application::new(APP_ID, gio::ApplicationFlags::FLAGS_NONE) {
         Ok(app) => {
-            app.connect_activate(|app| gui::setup_ui(app));
+            app.connect_startup(|app| {
+                gui::setup_ui(app);
+            });
+            app.connect_activate(|_| {});
             app.run(&[]);
         },
         Err(_) => {
