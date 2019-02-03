@@ -6,24 +6,11 @@ use gio::prelude::*;
 use gtk::prelude::*;
 
 mod gui;
+mod game;
 mod config;
-
-pub struct Game {
-    score: i32
-}
-
-impl Game {
-    pub fn new() -> Self {
-        Game {
-            score: 0
-        }
-    }
-}
 
 fn main() {
     const APP_ID: &str = "io.github.ian910297.gtk-snake";
-
-    let game = Game::new();
 
     match gtk::Application::new(APP_ID, gio::ApplicationFlags::FLAGS_NONE) {
         Ok(app) => {
