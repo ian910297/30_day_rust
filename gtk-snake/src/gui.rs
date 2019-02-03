@@ -3,13 +3,12 @@ use gtk::prelude::*;
 use gtk::{
     Application, ApplicationWindow, Button, DrawingArea, Label, 
     Orientation, WindowPosition};
-use std::{cell::RefCell, rc::Rc, collections::HashMap};
-use std::sync::{Arc, Mutex};
+use std::{rc::Rc, cell::RefCell};
 use crate::config::*;
 use crate::game::*;
 
 pub fn setup_ui(app: &Application) {
-    let mut game = Game::new();
+    let game = Rc::new(RefCell::new(Game::new()));
     let window = ApplicationWindow::new(app);
     let config = Config::new();
 
@@ -28,6 +27,16 @@ pub fn setup_ui(app: &Application) {
     let intro_str = Label::new("GTK SNARK");
     let start_btn = Button::new_with_label("Start");
     let quit_btn = Button::new_with_label("Quit");
+    let game_clone = game.clone();
+    start_btn.connect_clicked(move |btn| {
+        if game_clone.borrow().is_running() {
+            btn.set_label("start");
+            game_clone.borrow_mut().pause();
+        } else {
+            btn.set_label("pause");
+            game_clone.borrow_mut().run();
+        }
+    });
     menu_box.pack_start(&intro_str, true, true, 0);
     menu_box.pack_start(&start_btn, true, false, 0);
     menu_box.pack_start(&quit_btn, true, false, 0);
@@ -35,7 +44,9 @@ pub fn setup_ui(app: &Application) {
     // Score board
     let score_board_box = gtk::Box::new(Orientation::Horizontal, 10);
     let score_str = Label::new("Score: 0");
+    let time_str = Label::new("Time: 100");
     score_board_box.pack_start(&score_str, true, true, 0);
+    score_board_box.pack_start(&time_str, true, true, 0);
     
     // Drawing Area
     let game_box = gtk::Box::new(Orientation::Vertical, 5);
@@ -49,9 +60,16 @@ pub fn setup_ui(app: &Application) {
     window.show_all();
 
     let tick = move || {
-        let curr_score = game.increase_score();
-        score_str.set_text(&curr_score);
+        if game.borrow().is_running()  {
+            let (curr_score, curr_time) = game.borrow_mut().update();
+            score_str.set_text(&curr_score);
+            time_str.set_text(&curr_time);
+        } else {
+            
+        }
+
         gtk::Continue(true)
     };
+
     gtk::timeout_add_seconds(1, tick);
 }
