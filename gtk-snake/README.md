@@ -16,8 +16,14 @@ A card game
 * [kirjavascript/snake-rs](https://github.com/kirjavascript/snake-rs)  
 A snake game and you can play on his website  
 
+* [dhad05/GoL](https://github.com/dhad05/GoL)  
+Conway's Game of Life in Rust. I learn how to use `Arc` to pass variable into the closure here.
+
 * [gtx-rs/examples](https://github.com/gtk-rs/examples)  
 Official examples  
+
+* [mmstick/gtkrs-tutorials](https://github.com/mmstick/gtkrs-tutorials)  
+Good programming structure for gtk
 
 ## Useful Command
 ```shell

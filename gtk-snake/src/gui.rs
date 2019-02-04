@@ -3,12 +3,12 @@ use gtk::prelude::*;
 use gtk::{
     Application, ApplicationWindow, Button, DrawingArea, Label, 
     Orientation, WindowPosition};
-use std::{rc::Rc, cell::RefCell};
+use std::sync::{Arc, Mutex};
 use crate::config::*;
 use crate::game::*;
 
 pub fn setup_ui(app: &Application) {
-    let game = Rc::new(RefCell::new(Game::new()));
+    let game = Arc::new(Mutex::new(Game::new()));
     let window = ApplicationWindow::new(app);
     let config = Config::new();
 
@@ -26,20 +26,11 @@ pub fn setup_ui(app: &Application) {
     let menu_box = gtk::Box::new(Orientation::Horizontal, 10);
     let intro_str = Label::new("GTK SNARK");
     let start_btn = Button::new_with_label("Start");
-    let quit_btn = Button::new_with_label("Quit");
-    let game_clone = game.clone();
-    start_btn.connect_clicked(move |btn| {
-        if game_clone.borrow().is_running() {
-            btn.set_label("start");
-            game_clone.borrow_mut().pause();
-        } else {
-            btn.set_label("pause");
-            game_clone.borrow_mut().run();
-        }
-    });
+    let restart_btn = Button::new_with_label("Restart");
+    
     menu_box.pack_start(&intro_str, true, true, 0);
     menu_box.pack_start(&start_btn, true, false, 0);
-    menu_box.pack_start(&quit_btn, true, false, 0);
+    menu_box.pack_start(&restart_btn, true, false, 0);
 
     // Score board
     let score_board_box = gtk::Box::new(Orientation::Horizontal, 10);
@@ -59,17 +50,68 @@ pub fn setup_ui(app: &Application) {
     window.add(&container);
     window.show_all();
 
-    let tick = move || {
-        if game.borrow().is_running()  {
-            let (curr_score, curr_time) = game.borrow_mut().update();
-            score_str.set_text(&curr_score);
-            time_str.set_text(&curr_time);
-        } else {
-            
-        }
+    // input
+    /*
+    let game_input_clone = game.clone();
+    window.connect_key_press_event(move |_, e| {
 
-        gtk::Continue(true)
-    };
+    });
+    */
 
-    gtk::timeout_add_seconds(1, tick);
+    {
+        // Start button event
+        let game = game.clone();
+
+        start_btn.clone().connect_clicked(move |btn| {
+            let mut game = game.lock().unwrap();
+            if (game.state == State::Init) ||
+               (game.state == State::Pause) 
+            {
+                btn.set_label("pause");
+                game.run();
+            } else if game.state == State::Running {
+                btn.set_label("continue");
+                game.pause();
+            }
+        });
+    }
+    
+    {
+        // Restart button event
+        let game = game.clone();
+        let start_btn = start_btn.clone();
+        let score_str = score_str.clone();
+        let time_str = time_str.clone();
+
+        restart_btn.connect_clicked(move |btn| {
+            let mut game = game.lock().unwrap();
+            start_btn.set_label("Start");
+            game.reset();
+            score_str.set_text("Score: 0");
+            time_str.set_text("Time: 100");
+        });
+    }
+
+    {
+        // Loop round
+        let game = game.clone();
+        let score_str = score_str.clone();
+        let time_str = time_str.clone();
+
+        let tick = move || {
+            let mut game = game.lock().unwrap();
+
+            if game.state == State::Running {
+                let (curr_score, curr_time) = game.update();
+                score_str.set_text(&curr_score);
+                time_str.set_text(&curr_time);
+            } else {
+                
+            }
+
+            gtk::Continue(true)
+        };
+
+        gtk::timeout_add_seconds(1, tick);
+    }
 }
