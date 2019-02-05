@@ -6,7 +6,7 @@ pub enum State {
     End
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Direction {
     Up,
     Down,
@@ -17,6 +17,7 @@ pub enum Direction {
 pub struct Game {
     score: i32,
     time: i32,
+    pub speedup: bool,
     pub direction: Direction,
     pub state: State
 }
@@ -26,6 +27,7 @@ impl Game {
         Game {
             score: 0,
             time: 100,
+            speedup: false,
             direction: Direction::Down,
             state: State::Init
         }

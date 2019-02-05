@@ -3,6 +3,8 @@ use gtk::prelude::*;
 use gtk::{
     Application, ApplicationWindow, Button, DrawingArea, Label, 
     Orientation, WindowPosition};
+use gdk::ModifierType;
+use gdk::enums::key;
 use std::sync::{Arc, Mutex};
 use crate::config::*;
 use crate::game::*;
@@ -50,13 +52,42 @@ pub fn setup_ui(app: &Application) {
     window.add(&container);
     window.show_all();
 
-    // input
-    /*
-    let game_input_clone = game.clone();
-    window.connect_key_press_event(move |_, e| {
+    {
+        // Keyboard input
+        // Control directions and speedup
+        let game = game.clone();
+        
+        window.connect_key_press_event(move |_, gdk| {
+            let mut game = game.lock().unwrap();
 
-    });
-    */
+            let speedup = gdk.get_state().contains(ModifierType::CONTROL_MASK);
+            if speedup {
+                game.speedup = true;
+            } else {
+                game.speedup = false;
+            }
+
+            let direction = match gdk.get_keyval() {
+                65362 | 119 | 87 => Some(Direction::Up),
+                65364 | 115 | 83 => Some(Direction::Down),
+                65361 | 97 | 56 => Some(Direction::Left),
+                65363 | 100 | 68 => Some(Direction::Right),
+                _ => None,
+            };
+            if direction.is_some() {
+                game.direction = direction.unwrap();
+            }
+
+            Inhibit(false)
+        });
+    }
+    
+    {
+        // Draw map: fruit, snake, map
+        canvas.connect_draw(move |_, ctx| {
+            Inhibit(false)
+        });
+    }
 
     {
         // Start button event
